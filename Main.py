@@ -1,4 +1,5 @@
 # Discord bot v1 by Pizzaz
+import discord
 from discord.ext import commands
 import random
 import os
@@ -18,11 +19,14 @@ if __name__ == "__main__":
     # Dice roll simulation.
     @bot.command(name='rl', help='Rolling dice(s). Example: .rl 2 6')
     async def roll(ctx, number_of_dice: int, number_of_sides: int):
-        dice = [
-            str(random.choice(range(1, number_of_sides + 1)))
-            for _ in range(number_of_dice)
-        ]
-        await ctx.send(', '.join(dice))
+        if number_of_dice != 0 and number_of_sides != 0:  # I don't want zeroes here. Zeroes do 50006 error.
+            dice = [
+                str(random.choice(range(1, number_of_sides + 1)))
+                for _ in range(number_of_dice)
+            ]
+            await ctx.send(', '.join(dice))
+        else:
+            await ctx.send("No zeroes boyo")
 
     # Creating a teams out of list of given names and desired teams number.
     @bot.command(name='ts', help='Assemble teams - .ts / name,name,name... / number of teams')
@@ -75,10 +79,45 @@ if __name__ == "__main__":
             await ctx.send(f"Can't do. It's either a bad name or you'r not an owner.")
 
     # Special command to show all of the records in the DB.
-    @bot.command(name='show', help='Shows all of the records. TESTING & ADMIN ONLY.')
+    @bot.command(name='show', help='Shows all of the records. TESTING & OWNER ONLY.')
+    @commands.is_owner()
     async def test_video(ctx):
         result = db_handler.adminShowAll()
-        await ctx.send(result)
+        await ctx.send(sendFormatted("DB consists of: ", result))
+
+    # Shows all of the videos added by message author
+    @bot.command(name='mv', help='Shows all of your videos.')
+    async def show_records(ctx):
+        owner = ctx.author.id  # Retrieving discord UNIQUE id
+        output = db_handler.showUserRecords(owner)
+        if len(output) != 0:
+            await ctx.send(sendFormatted("Your videos: ", output))
+        else:
+            await ctx.send(f"You have no videos :( Want to add some? Type .adv + name + URL")
+
+    # Shows all of the videos added by mentioned user
+    @bot.command(name='vof', help='Shows all of the mentioned user videos')
+    async def videosOf(ctx, user: discord.Member):
+        owner_id = user.id
+        output = db_handler.showUserRecords(owner_id)
+        if len(output) != 0:
+            await ctx.send(sendFormatted(f"{user} videos: ", output))
+        else:
+            await ctx.send(f"This user got no videos")
+
+    # Shows your unique discord id
+    @bot.command(name='myid', help='Shows your unique discord id.')
+    async def show_id(ctx):
+        owner = ctx.author.id
+        await ctx.send(f"Your id: {owner}")
+
+    # Shows unique id of a mentioned person
+    @bot.command(name="idof", help='Shows unique discord id of @someone')
+    async def id_of(ctx, user: discord.Member):
+        await ctx.send(f"ID of {user} is: {user.id}")
+
+    def sendFormatted(message: str, array):
+        return '{0} {1}'.format(message, array)
 
 
     bot.run(TOKEN)

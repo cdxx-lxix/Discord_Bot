@@ -33,9 +33,6 @@ def eraseRecord(erase_query, owner):
     cur.execute(f"""SELECT * FROM videobase WHERE name LIKE "{erase_query}" """)
     delete_candidate = cur.fetchone()
     owner_id = delete_candidate[2]
-    print(delete_candidate)
-    print(owner_id)
-    print(owner)
     if owner == owner_id:
         try:
             cur.execute(f''' DELETE FROM videobase WHERE name LIKE "{erase_query}" AND owner LIKE "{owner}" ''')
@@ -48,6 +45,12 @@ def eraseRecord(erase_query, owner):
 
 
 def adminShowAll():
-    cur.execute(f"""SELECT * FROM videobase""")
+    cur.execute(f"""SELECT name, owner FROM videobase""")
+    result = cur.fetchall()
+    return result
+
+
+def showUserRecords(owner):
+    cur.execute(f"""SELECT name FROM videobase WHERE owner LIKE '{owner}' """)
     result = cur.fetchall()
     return result
